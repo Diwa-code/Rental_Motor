@@ -135,8 +135,10 @@ class customerController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id_customer)
     {
-        //
+        $customer = tb_customer::findOrFail($id_customer);
+        $customer->delete();
+        return redirect('/customer')->with('pesan', 'Data berhasil dihapus');
     }
 }

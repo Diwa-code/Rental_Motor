@@ -35,7 +35,11 @@
           </td>
           <td class="d-flex gap-2">
             <a href="{{ route('customer.edit', $item->id_customer) }}" class="btn btn-warning">Edit</a>
-            <a href="{{ route('customer.destroy', $item->id_customer) }}" class="btn btn-danger">Hapus</a>
+            <form action="/customer/{{ $item->id_customer }}" method="POST" class="d-inline">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="btn btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus data?')">Hapus</button>
+            </form>
           </td>
         </tr>
         @empty
