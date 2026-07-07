@@ -23,7 +23,11 @@
       <td>{{ $item->nama_kategori }}</td>
       <td class="d-flex gap-2">
         <a href="{{ route('kategori.edit', $item->id_kategori) }}" class="btn btn-warning">Edit</a>
-        <a href="{{ route('kategori.destroy', $item->id_kategori) }}" class="btn btn-danger">Hapus</a>
+        <form action="/kategori/{{ $item->id_kategori }}" method="POST" class="d-inline">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus data?')">Hapus</button>
+        </form>
       </td>
     </tr>
     @empty

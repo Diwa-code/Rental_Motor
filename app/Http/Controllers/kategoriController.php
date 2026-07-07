@@ -21,7 +21,7 @@ class kategoriController extends Controller
      */
     public function create()
     {
-        //
+        return view('pages.kategori.add');
     }
 
     /**
@@ -29,7 +29,17 @@ class kategoriController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate ([
+            'nama_kategori' => 'required',
+        ], [
+            'nama_kategori.required' => 'Nama kategori harus diisi',
+        ]);
+
+        tb_kategori::create([
+            'nama_kategori' => $request->nama_kategori,
+        ]);
+
+        return redirect('/kategori')->with('pesan', 'Data berhasil ditambahkan');
     }
 
     /**
@@ -43,24 +53,35 @@ class kategoriController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(string $id_kategori)
     {
-        //
+        $data = tb_kategori::findOrFail($id_kategori);
+        return view('pages.kategori.edit', compact('data'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $id_kategori)
     {
-        //
+        $request->validate([
+            'nama_kategori' => 'required',
+        ], [
+            'nama_kategori.required' => 'Nama kategori harus diisi',
+        ]);
+
+        tb_kategori::findOrFail($id_kategori)->update([
+            'nama_kategori' => $request->nama_kategori,
+        ]);
+        return redirect('/kategori')->with('pesan', 'Data berhasil diupdate');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id_kategori)
     {
-        //
+        tb_kategori::findOrFail($id_kategori)->delete();
+        return redirect('/kategori')->with('pesan', 'Data berhasil dihapus');
     }
 }

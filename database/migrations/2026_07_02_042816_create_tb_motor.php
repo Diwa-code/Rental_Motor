@@ -16,8 +16,13 @@ return new class extends Migration
             $table->string('nama_motor');
             $table->text('deskripsi');
             $table->decimal('harga', 10, 2);
-            $table->integer('tersedia');
-            $table->string('foto');
+            
+            // Kolom enum untuk status dengan nilai default 'tersedia'
+            $table->enum('status', ['tersedia', 'disewa', 'servis'])->default('tersedia');
+            
+            // Kolom untuk menyimpan nama file gambar
+            $table->string('gambar_motor')->nullable();
+            
             $table->integer('tahun');
             $table->timestamps();
         });
