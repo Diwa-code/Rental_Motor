@@ -29,7 +29,7 @@
         @forelse ($data_motor as $item)
         <tr>
           <td>{{ $loop->iteration }}</td>
-          <td>{{ $item->nama_kategori }}</td>
+          <td>{{ $item->kategori->nama_kategori ?? '-' }}</td>
           <td>{{ $item->nama_motor }}</td>
           <td>{{ $item->tahun }}</td>
           <td>Rp {{ number_format($item->harga, 0, ',', '.') }}</td>

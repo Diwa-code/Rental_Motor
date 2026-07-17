@@ -128,7 +128,7 @@
                                             </div>
                                             <div>
                                                 <small class="text-muted d-block">Kategori</small>
-                                                <span class="fw-semibold">{{ $data_motor->nama_kategori }}</span>
+                                                <span class="fw-semibold">{{ $data_motor->kategori->nama_kategori ?? '-' }}</span>
                                             </div>
                                         </div>
                                     </div>

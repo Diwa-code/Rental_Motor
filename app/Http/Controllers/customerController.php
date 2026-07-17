@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\tb_customer;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Cache;
 
 
 class customerController extends Controller
@@ -64,6 +65,9 @@ class customerController extends Controller
             'alamat' => $request->alamat,
             'foto_ktp' => $namaGambar,
         ]);
+
+        // Hapus cache data_customer karena data berubah
+        Cache::forget('data_customer');
 
         //untuk menampilkan kembali ke halaman produk setalah data ditambah
         return redirect('/customer')->with('pesan', 'Data berhasil ditambahkan');
@@ -129,6 +133,10 @@ class customerController extends Controller
         }
 
         tb_customer::where('id_customer', $id)->update($dataUpdate);
+
+        // Hapus cache data_customer karena data berubah
+        Cache::forget('data_customer');
+
         return redirect('/customer')->with('pesan', 'Data berhasil diupdate');
     }
 
@@ -139,6 +147,10 @@ class customerController extends Controller
     {
         $customer = tb_customer::findOrFail($id_customer);
         $customer->delete();
+
+        // Hapus cache data_customer karena data berubah
+        Cache::forget('data_customer');
+
         return redirect('/customer')->with('pesan', 'Data berhasil dihapus');
     }
 }

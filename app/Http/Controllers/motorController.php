@@ -7,30 +7,33 @@ use App\Models\tb_motor;
 use App\Models\tb_kategori;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Cache;
 
 class motorController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * Menggunakan Eager Loading with('kategori') untuk mengurangi jumlah query ke Supabase.
+     * Sebelumnya: join() manual = 1 query besar yang lambat di Supabase.
+     * Sekarang: with() = 2 query ringan (SELECT motor + SELECT kategori WHERE IN).
      */
     public function index()
     {
-       $data_motor = tb_motor::join('tb_kategori', 'tb_motor.kategori_id', '=', 'tb_kategori.id_kategori')
-            ->get(); 
-        // $queryBuilder = DB::table('tb_produk')->get(); 
-        // //query builder untuk mengambil semua data yang ada di tabel produk
+        $data_motor = tb_motor::with('kategori')->get();
         return view('pages.motor.show', compact('data_motor'));
     }
 
     /**
      * Show the form for creating a new resource.
+     * Data kategori di-cache selama 5 menit karena jarang berubah.
      */
     public function create()
     {
-        // Mengambil semua data kategori untuk ditampilkan di dropdown form
-        $data_kategori = tb_kategori::all();
-        
-        // Mengarahkan ke halaman form tambah motor dan membawa data kategori
+        // Cache data kategori selama 5 menit (300 detik)
+        $data_kategori = Cache::remember('data_kategori', 300, function () {
+            return tb_kategori::all();
+        });
+
         return view('pages.motor.add', compact('data_kategori'));
     }
 
@@ -88,31 +91,36 @@ class motorController extends Controller
             'deskripsi'    => $request->deskripsi,
         ]);
 
+        // Hapus cache motor yang tersedia karena data berubah
+        Cache::forget('data_motor_tersedia');
+
         // 4. Redirect Kembali ke Halaman Utama dengan Pesan Sukses
         return redirect('/motor')->with('pesan', 'Data motor berhasil ditambahkan');
     }
 
     /**
      * Display the specified resource.
+     * Menggunakan Eager Loading with('kategori') sebagai pengganti join() manual.
      */
     public function show(string $id_motor)
     {
-        $data_motor = tb_motor::join('tb_kategori', 'tb_motor.kategori_id', '=', 'tb_kategori.id_kategori')
-        ->where('id_motor', $id_motor)
-        ->firstOrFail();
-    return view('pages.motor.detail', compact('data_motor'));
+        $data_motor = tb_motor::with('kategori')->findOrFail($id_motor);
+        return view('pages.motor.detail', compact('data_motor'));
     }
 
     /**
      * Show the form for editing the specified resource.
+     * Data kategori di-cache selama 5 menit.
      */
     public function edit(string $id_motor)
     {
         $data = tb_motor::findOrFail($id_motor);
         
-        // Mengambil semua data kategori untuk opsi dropdown
-        $data_kategori = tb_kategori::all();
-        
+        // Cache data kategori selama 5 menit (300 detik)
+        $data_kategori = Cache::remember('data_kategori', 300, function () {
+            return tb_kategori::all();
+        });
+
         // Mengarahkan ke halaman edit dan mengirimkan data motor serta kategori
         return view('pages.motor.edit', compact('data', 'data_kategori'));
     }
@@ -179,6 +187,9 @@ class motorController extends Controller
         // 4. Update data ke database
         tb_motor::where('id_motor', $id_motor)->update($dataUpdate);
 
+        // Hapus cache motor yang tersedia karena data berubah
+        Cache::forget('data_motor_tersedia');
+
         // 5. Redirect kembali ke halaman utama
         return redirect('/motor')->with('pesan', 'Data motor berhasil diupdate');
     }
@@ -199,6 +210,9 @@ class motorController extends Controller
 
         // 3. Hapus baris data dari database
         $motor->delete();
+
+        // Hapus cache motor yang tersedia karena data berubah
+        Cache::forget('data_motor_tersedia');
 
         // 4. Redirect kembali ke halaman utama dengan pesan sukses
         return redirect('/motor')->with('pesan', 'Data motor berhasil dihapus beserta gambarnya');

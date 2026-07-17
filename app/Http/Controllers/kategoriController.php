@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\tb_kategori;
+use Illuminate\Support\Facades\Cache;
 
 class kategoriController extends Controller
 {
@@ -39,6 +40,9 @@ class kategoriController extends Controller
             'nama_kategori' => $request->nama_kategori,
         ]);
 
+        // Hapus cache data_kategori karena data berubah
+        Cache::forget('data_kategori');
+
         return redirect('/kategori')->with('pesan', 'Data berhasil ditambahkan');
     }
 
@@ -73,6 +77,10 @@ class kategoriController extends Controller
         tb_kategori::findOrFail($id_kategori)->update([
             'nama_kategori' => $request->nama_kategori,
         ]);
+
+        // Hapus cache data_kategori karena data berubah
+        Cache::forget('data_kategori');
+
         return redirect('/kategori')->with('pesan', 'Data berhasil diupdate');
     }
 
@@ -82,6 +90,10 @@ class kategoriController extends Controller
     public function destroy(string $id_kategori)
     {
         tb_kategori::findOrFail($id_kategori)->delete();
+
+        // Hapus cache data_kategori karena data berubah
+        Cache::forget('data_kategori');
+
         return redirect('/kategori')->with('pesan', 'Data berhasil dihapus');
     }
 }

@@ -7,25 +7,37 @@ use App\Models\tb_transaksi;
 use App\Models\tb_customer; // Sesuaikan dengan nama model Customer Anda
 use App\Models\tb_motor;
 use Carbon\Carbon; // Library untuk manipulasi waktu dan tanggal
+use Illuminate\Support\Facades\Cache;
 
 class transaksiController extends Controller
 {
+    /**
+     * Mengambil semua data transaksi beserta relasinya.
+     * with(['customer', 'motor']) = Eager Loading, hanya 3 query (transaksi + customer + motor).
+     * Tanpa with(), setiap baris transaksi akan memanggil query terpisah (N+1 problem).
+     */
     public function index()
     {
-        // Mengambil semua data transaksi beserta relasinya
-        // Fungsi with() akan memanggil fungsi relasi yang ada di Model Transaksi
         $data_transaksi = tb_transaksi::with(['customer', 'motor'])->get();
 
         return view('pages.transaksi.show', compact('data_transaksi'));
     }
 
+    /**
+     * Data customer dan motor tersedia di-cache karena jarang berubah.
+     */
     public function create()
     {
-        // Ambil semua data customer
-        $data_customer = tb_customer::all();
+        // Cache data customer selama 5 menit (300 detik)
+        $data_customer = Cache::remember('data_customer', 300, function () {
+            return tb_customer::all();
+        });
 
-        // PENTING: Hanya ambil motor yang statusnya 'tersedia'
-        $data_motor = tb_motor::where('status', 'tersedia')->get();
+        // Cache data motor tersedia selama 2 menit (120 detik)
+        // Durasi lebih pendek karena status motor bisa berubah setelah transaksi
+        $data_motor = Cache::remember('data_motor_tersedia', 120, function () {
+            return tb_motor::where('status', 'tersedia')->get();
+        });
 
         return view('pages.transaksi.add', compact('data_customer', 'data_motor'));
     }
@@ -84,8 +96,13 @@ class transaksiController extends Controller
         ]);
 
         $motor->update(['status' => 'disewa']);
+
+        // Hapus cache karena data motor tersedia sudah berubah
+        Cache::forget('data_motor_tersedia');
+
         return redirect('/transaksi')->with('pesan', 'Transaksi berhasil disimpan!');
     }
+
     public function show(string $id)
     {
         // Biasanya transaksi tidak menggunakan show jika sudah lengkap di index
@@ -102,35 +119,56 @@ class transaksiController extends Controller
         // Logika update (Opsional)
     }
 
+    /**
+     * Hapus transaksi dan kembalikan status motor.
+     * Menggunakan relasi motor() dari model untuk menghindari query terpisah.
+     */
     public function destroy(string $id)
     {
-        $transaksi = tb_transaksi::findOrFail($id);
+        // Eager load relasi motor agar hanya 1 query (bukan 2 terpisah)
+        $transaksi = tb_transaksi::with('motor')->findOrFail($id);
 
-        // 1. Cari motor yang ada di dalam transaksi ini
-        $motor = tb_motor::findOrFail($transaksi->motor_id);
+        // Kembalikan status motor menjadi 'tersedia' via relasi
+        if ($transaksi->motor) {
+            $transaksi->motor->update(['status' => 'tersedia']);
+        }
 
-        // 2. Kembalikan status motor menjadi 'tersedia'
-        $motor->update(['status' => 'tersedia']);
-
-        // 3. Hapus data transaksi
+        // Hapus data transaksi
         $transaksi->delete();
+
+        // Hapus cache karena status motor berubah
+        Cache::forget('data_motor_tersedia');
 
         return redirect('/transaksi')->with('pesan', 'Transaksi berhasil dihapus dan Motor kembali tersedia');
     }
 
+    /**
+     * Cetak invoice transaksi.
+     * Menggunakan Eager Loading untuk memuat data customer dan motor sekaligus.
+     */
     public function invoice(string $id)
     {
         $transaksi = tb_transaksi::with(['customer', 'motor'])->findOrFail($id);
         return view('pages.transaksi.invoice', compact('transaksi'));
     }
 
+    /**
+     * Tandai transaksi sebagai selesai dan kembalikan motor.
+     * Menggunakan relasi motor() untuk mengurangi query.
+     */
     public function selesai(string $id)
     {
-        $transaksi = tb_transaksi::findOrFail($id);
+        // Eager load relasi motor agar hanya 1 query (bukan 2 terpisah)
+        $transaksi = tb_transaksi::with('motor')->findOrFail($id);
         $transaksi->update(['status_transaksi' => 'selesai']);
 
-        $motor = tb_motor::findOrFail($transaksi->motor_id);
-        $motor->update(['status' => 'tersedia']);
+        // Kembalikan status motor via relasi
+        if ($transaksi->motor) {
+            $transaksi->motor->update(['status' => 'tersedia']);
+        }
+
+        // Hapus cache karena status motor berubah
+        Cache::forget('data_motor_tersedia');
 
         return redirect()->back()->with('pesan', 'Transaksi Selesai. Motor kembali tersedia.');
     }
