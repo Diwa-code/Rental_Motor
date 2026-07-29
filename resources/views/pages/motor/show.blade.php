@@ -20,6 +20,8 @@
           <th scope="col" class="bg-primary text-white">Nama Kategori</th>
           <th scope="col" class="bg-primary text-white">Nama Motor</th>
           <th scope="col" class="bg-primary text-white">Tahun Motor</th>
+          <th scope="col" class="bg-primary text-white">CC Mesin</th>
+          <th scope="col" class="bg-primary text-white">Tag Tambahan</th>
           <th scope="col" class="bg-primary text-white">Harga Sewa</th>
           <th scope="col" class="bg-primary text-white">Status</th>
           <th scope="col" class="bg-primary text-white">aksi</th>
@@ -29,9 +31,11 @@
         @forelse ($data_motor as $item)
         <tr>
           <td>{{ $loop->iteration }}</td>
-          <td>{{ $item->kategori->nama_kategori ?? '-' }}</td>
+          <td>{{ $item->kategori->kategori_badge ?? '-' }}</td>
           <td>{{ $item->nama_motor }}</td>
           <td>{{ $item->tahun }}</td>
+          <td>{{ $item->cc_mesin }}</td>
+          <td>{{ $item->tag_tambahan }}</td>
           <td>Rp {{ number_format($item->harga, 0, ',', '.') }}</td>
           <td>{{ $item-> status}}</td>
           <td class="d-flex gap-2">

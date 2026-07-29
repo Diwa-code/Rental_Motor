@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,10 +12,12 @@ return new class extends Migration
     {
         Schema::create('tb_customer', function (Blueprint $table) {
             $table->id('id_customer');
-            $table->string('nama');
-            $table->text('alamat');
-            $table->string('no_telp');
-            $table->string('foto_ktp');
+            // Ini adalah jembatan penghubungnya:
+            $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete();
+            $table->string('nama')->nullable();
+            $table->text('alamat')->nullable();
+            $table->string('no_telp')->nullable();
+            $table->string('foto_ktp')->nullable();
             $table->timestamps();
         });
     }

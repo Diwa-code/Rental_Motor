@@ -2,23 +2,23 @@
 
 @section('content')
     <div class="card">
-        <div class="card-header">Tambah Data Kategori</div>
+        <div class="card-header">Tambah Badge Kategori</div>
         <div class="card-body">
-            <form action="/kategori" method="POST" enctype="multipart/form-data">
+            <form action="/kategori" method="POST">
                 @csrf
-                <div class="row">
-                    <div class="col-sm">
-                        <div class="mb-3">
-                            <label for="nama_kategori" class="form-label">Nama Kategori</label>
-                            <input type="text" name="nama_kategori" class="form-control" value="{{ old('nama_kategori') }}">
-                            @error('nama_kategori')
-                            <div class="form-text text-danger">{{ $message }}</div>
-                            @enderror
-                        </div>
+                <div class="mb-3">
+                    <label for="kategori_badge" class="form-label">Nama Badge</label>
+                    <input type="text" name="kategori_badge" id="kategori_badge" class="form-control"
+                        placeholder="Contoh: Automatic, Off-Road, Sport" value="{{ old('kategori_badge') }}">
+                    <div class="form-text">Badge ini akan muncul sebagai pilihan di form tambah/edit motor.</div>
+                    @error('kategori_badge')
+                        <div class="form-text text-danger">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div style="margin-top: 10px;">
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <a href="/kategori" class="btn btn-secondary ms-2">Batal</a>
                 </div>
             </form>
         </div>

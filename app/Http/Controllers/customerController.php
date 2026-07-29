@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use App\Models\tb_customer;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 
 
 class customerController extends Controller
@@ -60,6 +61,7 @@ class customerController extends Controller
 
         //query untuk mengambil data yang di isi dari show.blade dengna menggunakan name dari kolom pada tampilan add, name="nama_produk_"
         tb_customer::create([
+            'user_id' => null, // Dikosongkan karena pelanggan offline tidak punya akun
             'nama' => $request->nama,
             'no_telp' => $request->no_telp,
             'alamat' => $request->alamat,
@@ -79,7 +81,7 @@ class customerController extends Controller
      */
     public function show(string $id_customer)
     {
-        
+
     }
 
     /**
@@ -117,19 +119,19 @@ class customerController extends Controller
             'alamat' => $request->alamat,
         ];
 
-         // Handle upload gambar baru (jika ada)
-    if ($request->hasFile('foto_ktp')) {
-        // Hapus gambar lama jika ada
-        $produkLama = tb_customer::findOrFail($id);
-        if ($produkLama->foto_ktp && File::exists(public_path('foto_ktp_customer/' . $produkLama->foto_ktp))) {
-            File::delete(public_path('foto_ktp_customer/' . $produkLama->foto_ktp));
-        }
+        // Handle upload gambar baru (jika ada)
+        if ($request->hasFile('foto_ktp')) {
+            // Hapus gambar lama jika ada
+            $produkLama = tb_customer::findOrFail($id);
+            if ($produkLama->foto_ktp && File::exists(public_path('foto_ktp_customer/' . $produkLama->foto_ktp))) {
+                File::delete(public_path('foto_ktp_customer/' . $produkLama->foto_ktp));
+            }
 
-        // Simpan gambar baru dengan nama acak
-        $ekstensi = $request->file('foto_ktp')->getClientOriginalExtension();
-        $namaGambar = Str::random(30) . '.' . $ekstensi;
-        $request->file('foto_ktp')->move(public_path('foto_ktp_customer'), $namaGambar);
-        $dataUpdate['foto_ktp'] = $namaGambar;
+            // Simpan gambar baru dengan nama acak
+            $ekstensi = $request->file('foto_ktp')->getClientOriginalExtension();
+            $namaGambar = Str::random(30) . '.' . $ekstensi;
+            $request->file('foto_ktp')->move(public_path('foto_ktp_customer'), $namaGambar);
+            $dataUpdate['foto_ktp'] = $namaGambar;
         }
 
         tb_customer::where('id_customer', $id)->update($dataUpdate);

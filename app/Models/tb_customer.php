@@ -13,6 +13,7 @@ class tb_customer extends Model
     protected $primaryKey = 'id_customer';
 
     protected $fillable = [
+        'user_id',
         'nama',
         'alamat',
         'no_telp',

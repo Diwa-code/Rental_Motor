@@ -30,20 +30,20 @@ class kategoriController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate ([
-            'nama_kategori' => 'required',
+        $request->validate([
+            'kategori_badge' => 'required|string|max:100',
         ], [
-            'nama_kategori.required' => 'Nama kategori harus diisi',
+            'kategori_badge.required' => 'Nama badge wajib diisi',
         ]);
 
         tb_kategori::create([
-            'nama_kategori' => $request->nama_kategori,
+            'kategori_badge' => $request->kategori_badge,
         ]);
 
         // Hapus cache data_kategori karena data berubah
         Cache::forget('data_kategori');
 
-        return redirect('/kategori')->with('pesan', 'Data berhasil ditambahkan');
+        return redirect('/kategori')->with('pesan', 'Badge berhasil ditambahkan');
     }
 
     /**
@@ -69,19 +69,19 @@ class kategoriController extends Controller
     public function update(Request $request, string $id_kategori)
     {
         $request->validate([
-            'nama_kategori' => 'required',
+            'kategori_badge' => 'required|string|max:100',
         ], [
-            'nama_kategori.required' => 'Nama kategori harus diisi',
+            'kategori_badge.required' => 'Nama badge wajib diisi',
         ]);
 
         tb_kategori::findOrFail($id_kategori)->update([
-            'nama_kategori' => $request->nama_kategori,
+            'kategori_badge' => $request->kategori_badge,
         ]);
 
         // Hapus cache data_kategori karena data berubah
         Cache::forget('data_kategori');
 
-        return redirect('/kategori')->with('pesan', 'Data berhasil diupdate');
+        return redirect('/kategori')->with('pesan', 'Badge berhasil diupdate');
     }
 
     /**

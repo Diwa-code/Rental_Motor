@@ -27,12 +27,13 @@ class motorController extends Controller
      * Show the form for creating a new resource.
      * Data kategori di-cache selama 5 menit karena jarang berubah.
      */
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create()
     {
-        // Cache data kategori selama 5 menit (300 detik)
-        $data_kategori = Cache::remember('data_kategori', 300, function () {
-            return tb_kategori::all();
-        });
+        // Ambil data langsung dari tabel database (tanpa cache) agar selalu real-time
+        $data_kategori = tb_kategori::all();
 
         return view('pages.motor.add', compact('data_kategori'));
     }
@@ -44,16 +45,16 @@ class motorController extends Controller
     {
         // 1. Validasi Input dari Form
         $request->validate([
-            'kategori_id'  => 'required',
             'nama_motor'   => 'required',
             'tahun'        => 'required|numeric',
             'harga'        => 'required|numeric',
+            'cc_mesin'     => 'nullable|string|max:50',
+            'tag_tambahan' => 'nullable|string|max:100',
             'status'       => 'required|in:tersedia,disewa,servis',
             'gambar_motor' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'deskripsi'    => 'required',
         ], [
             // Kustomisasi pesan error agar lebih ramah dibaca pengguna
-            'kategori_id.required'  => 'Kategori motor wajib dipilih',
             'nama_motor.required'   => 'Nama motor wajib diisi',
             'tahun.required'        => 'Tahun keluaran wajib diisi',
             'tahun.numeric'         => 'Tahun harus berupa angka',
@@ -70,31 +71,27 @@ class motorController extends Controller
         // 2. Proses Upload Gambar (Jika User Mengunggah File)
         $namaGambar = null;
         if ($request->hasFile('gambar_motor')) {
-            // Mengambil ekstensi file asli (misal: jpg, png)
             $ekstensi = $request->file('gambar_motor')->getClientOriginalExtension();
-            
-            // Membuat nama file acak agar tidak bentrok dengan file lain
             $namaGambar = Str::random(30) . '.' . $ekstensi;
-            
-            // Memindahkan file ke folder public/gambar_motor
             $request->file('gambar_motor')->move(public_path('gambar_motor'), $namaGambar);
         }
 
         // 3. Simpan Data ke Database
         tb_motor::create([
-            'kategori_id'  => $request->kategori_id,
+            'kategori_id'  => $request->kategori_id ?: null,
             'nama_motor'   => $request->nama_motor,
             'tahun'        => $request->tahun,
             'harga'        => $request->harga,
+            'cc_mesin'     => $request->cc_mesin,
+            'tag_tambahan' => $request->tag_tambahan,
             'status'       => $request->status,
-            'gambar_motor' => $namaGambar, // Akan berisi nama file acak atau null
+            'gambar_motor' => $namaGambar,
             'deskripsi'    => $request->deskripsi,
         ]);
 
         // Hapus cache motor yang tersedia karena data berubah
         Cache::forget('data_motor_tersedia');
 
-        // 4. Redirect Kembali ke Halaman Utama dengan Pesan Sukses
         return redirect('/motor')->with('pesan', 'Data motor berhasil ditambahkan');
     }
 
@@ -115,11 +112,9 @@ class motorController extends Controller
     public function edit(string $id_motor)
     {
         $data = tb_motor::findOrFail($id_motor);
-        
-        // Cache data kategori selama 5 menit (300 detik)
-        $data_kategori = Cache::remember('data_kategori', 300, function () {
-            return tb_kategori::all();
-        });
+
+        // Ambil data langsung dari tabel database (tanpa cache)
+        $data_kategori = tb_kategori::all();
 
         // Mengarahkan ke halaman edit dan mengirimkan data motor serta kategori
         return view('pages.motor.edit', compact('data', 'data_kategori'));
@@ -132,16 +127,16 @@ class motorController extends Controller
     {
         // 1. Validasi Input
         $request->validate([
-            'kategori_id'  => 'required',
+            'kategori_id'  => 'nullable|exists:tb_kategori,id_kategori',
             'nama_motor'   => 'required',
             'tahun'        => 'required|numeric',
             'harga'        => 'required|numeric',
+            'cc_mesin'     => 'nullable|string|max:50',
+            'tag_tambahan' => 'nullable|string|max:100',
             'status'       => 'required|in:tersedia,disewa,servis',
-            // Gambar boleh kosong (nullable) karena user mungkin tidak ingin mengganti fotonya
-            'gambar_motor' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', 
+            'gambar_motor' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'deskripsi'    => 'required',
         ], [
-            'kategori_id.required'  => 'Kategori motor wajib dipilih',
             'nama_motor.required'   => 'Nama motor wajib diisi',
             'tahun.required'        => 'Tahun keluaran wajib diisi',
             'tahun.numeric'         => 'Tahun harus berupa angka',
@@ -157,10 +152,12 @@ class motorController extends Controller
 
         // 2. Siapkan data dasar yang akan diupdate
         $dataUpdate = [
-            'kategori_id'  => $request->kategori_id,
+            'kategori_id'  => $request->kategori_id ?: null,
             'nama_motor'   => $request->nama_motor,
             'tahun'        => $request->tahun,
             'harga'        => $request->harga,
+            'cc_mesin'     => $request->cc_mesin,
+            'tag_tambahan' => $request->tag_tambahan,
             'status'       => $request->status,
             'deskripsi'    => $request->deskripsi,
         ];
@@ -168,19 +165,12 @@ class motorController extends Controller
         // 3. Handle upload gambar baru (jika ada)
         if ($request->hasFile('gambar_motor')) {
             $motorLama = tb_motor::findOrFail($id_motor);
-            
-            // Cek apakah gambar lama ada di database dan file fisiknya ada di folder
             if ($motorLama->gambar_motor && File::exists(public_path('gambar_motor/' . $motorLama->gambar_motor))) {
-                // Hapus file gambar lama
                 File::delete(public_path('gambar_motor/' . $motorLama->gambar_motor));
             }
-
-            // Simpan gambar baru
             $ekstensi = $request->file('gambar_motor')->getClientOriginalExtension();
             $namaGambar = Str::random(30) . '.' . $ekstensi;
             $request->file('gambar_motor')->move(public_path('gambar_motor'), $namaGambar);
-            
-            // Masukkan nama gambar baru ke array data yang akan diupdate
             $dataUpdate['gambar_motor'] = $namaGambar;
         }
 
@@ -190,7 +180,6 @@ class motorController extends Controller
         // Hapus cache motor yang tersedia karena data berubah
         Cache::forget('data_motor_tersedia');
 
-        // 5. Redirect kembali ke halaman utama
         return redirect('/motor')->with('pesan', 'Data motor berhasil diupdate');
     }
 

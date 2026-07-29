@@ -2,25 +2,24 @@
 
 @section('content')
     <div class="card">
-        <div class="card-header">Edit Data Kategori</div>
+        <div class="card-header">Edit Badge Kategori</div>
         <div class="card-body">
-            <form action="/kategori/{{ $data->id_kategori }}" method="POST" enctype="multipart/form-data">
+            <form action="/kategori/{{ $data->id_kategori }}" method="POST">
                 @method('PUT')
                 @csrf
-                <div class="row">
-                    {{-- Kolom Kiri: Nama, No Telepon, Foto KTP --}}
-                    <div class="col-sm">
-                        <div class="mb-3">
-                            <label for="nama_kategori" class="form-label">Nama Kategori</label>
-                            <input type="text" name="nama_kategori" class="form-control" value="{{ $data->nama_kategori }}">
-                            @error('nama_kategori')
-                            <div class="form-text text-danger">{{ $message }}</div>
-                            @enderror
-                        </div>
+                <div class="mb-3">
+                    <label for="kategori_badge" class="form-label">Nama Badge</label>
+                    <input type="text" name="kategori_badge" id="kategori_badge" class="form-control"
+                        value="{{ old('kategori_badge', $data->kategori_badge) }}">
+                    <div class="form-text">Badge ini akan muncul sebagai pilihan di form tambah/edit motor.</div>
+                    @error('kategori_badge')
+                        <div class="form-text text-danger">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div style="margin-top: 10px;">
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <a href="/kategori" class="btn btn-secondary ms-2">Batal</a>
                 </div>
             </form>
         </div>

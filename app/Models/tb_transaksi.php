@@ -14,7 +14,7 @@ class tb_transaksi extends Model
 
     protected $fillable = [
     'customer_id', 'motor_id', 'harga_sewa', 'durasi', 
-    'tgl_mulai', 'tgl_selesai', 'total_bayar', 'status_transaksi'
+    'tgl_mulai', 'tgl_selesai', 'total_bayar', 'status_transaksi', 'snap_token'
 ];
 
     /**
