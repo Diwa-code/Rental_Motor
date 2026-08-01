@@ -103,10 +103,19 @@ class transaksiController extends Controller
         return redirect('/transaksi')->with('pesan', 'Transaksi berhasil disimpan!');
     }
 
-    public function show(string $id)
-    {
-        // Biasanya transaksi tidak menggunakan show jika sudah lengkap di index
+    public function show($id)
+{
+    // Ambil data transaksi beserta relasi tabel motor
+    $transaksi = tb_transaksi::join('tb_motor', 'tb_transaksi.motor_id', '=', 'tb_motor.id_motor')
+                ->where('tb_transaksi.id_transaksi', $id)
+                ->first();
+
+    if ($transaksi) {
+        return response()->json($transaksi);
     }
+
+    return response()->json(['message' => 'Data tidak ditemukan'], 404);
+}
 
     public function edit(string $id)
     {
